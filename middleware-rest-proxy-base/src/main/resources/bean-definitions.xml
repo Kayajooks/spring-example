@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:amq="http://activemq.apache.org/schema/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:cxf="http://camel.apache.org/schema/cxf" xmlns:broker="http://activemq.apache.org/schema/core"
+	xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd 
+        http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd 
+        http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd 
+        http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd">
+
+<!-- 	<bean id="ottracer" class="org.apache.camel.opentracing.OpenTracingTracer"> -->
+<!-- 		<property name="tracer" ref="tracer"/> -->
+<!-- 	</bean>	 -->
+	
+	<bean id="restlet" class="org.apache.camel.component.restlet.RestletComponent">
+		<property name="minThreads" value="10" />
+		<property name="maxThreads" value="50" />
+	</bean>
+
+	<bean id="RestletComponent" class="org.restlet.Component" />
+
+	<bean id="RestletComponentService" class="org.apache.camel.component.restlet.RestletComponent">
+		<constructor-arg index="0">
+			<ref bean="RestletComponent" />
+		</constructor-arg>
+	</bean>
+
+	<!-- iniciación de la conexión hacia el broker de mensajería-->
+	<bean id="jmsConnectionFactory" 
+	   class="org.apache.activemq.ActiveMQConnectionFactory">
+	   <property name="brokerURL" value="tcp://localhost:61616" />
+	   
+	   <property name="userName" value="admin"/>
+	   <property name="password" value="admin"/>
+	</bean>
+	 
+	<!-- definición del pool de conexiones necesarias para la conexión-->
+	<bean id="pooledConnectionFactory" 
+	   class="org.apache.activemq.pool.PooledConnectionFactory" init-method="start" destroy-method="stop">
+	   <property name="maxConnections" value="8" />
+	   <property name="connectionFactory" ref="jmsConnectionFactory" />
+	</bean>
+	 
+	<!-- configuración del comportamiento de la conexión-->
+	<bean id="jmsConfig" 
+	   class="org.apache.camel.component.jms.JmsConfiguration">
+	   <property name="connectionFactory" ref="pooledConnectionFactory"/>
+	   <property name="concurrentConsumers" value="10"/>
+	</bean>
+	 
+	<!-- inicialización del componente activemq-->
+	<bean id="activemq" 
+	    class="org.apache.activemq.camel.component.ActiveMQComponent">
+	    <property name="configuration" ref="jmsConfig"/>
+	</bean>
+	
+</beans>

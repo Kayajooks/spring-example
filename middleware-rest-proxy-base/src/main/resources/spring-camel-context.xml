@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:camel="http://camel.apache.org/schema/spring"
+	xsi:schemaLocation="
+         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+         http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+         
+	<camelContext xmlns="http://camel.apache.org/schema/spring" >
+		<propertyPlaceholder id="placeholder" location="classpath:application.properties"/>
+		<onException>
+			    <exception>java.lang.Exception</exception>
+			    <redeliveryPolicy maximumRedeliveries="{{camel.timeout.max-delivery}}" redeliveryDelay="{{camel.timeout.redelivery-delay}}"/>
+			    <log message="error al enviar el mesaje"></log>
+			    <to uri="velocity:velocity/sqlException-json.vm"/>
+		</onException>
+	    <intercept>
+	    	<transform><simple>{"request":{"headers"{"http":"sdasdasd","http":"sdasdasd","http":"sdasdasd","http":"sdasdasd",}}}</simple></transform>
+	    	<log message="mensaje: ${body}"></log>	
+	    </intercept>
+		
+		<route>
+			<from uri="restlet:http://0.0.0.0:8899/saldo/cliente/1?restletMethod=get" />
+			<to uri="restlet:http://jsonplaceholder.typicode.com/posts/1?restletMethod=get&amp;CamelRestletLogin={{camel.rest.basicauth.user}}&amp;CamelRestletPassword={{camel.rest.basicauth.pass}}" />
+		</route>
+	</camelContext>
+</beans>
